@@ -1,7 +1,7 @@
 import curses
 import time
 
-class ConwayNode:
+class Node:
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -10,6 +10,7 @@ class ConwayNode:
 
     def update_neighbours(self, full_map):
         self.neighbours = 0
+        self.native_neighbours = 0
         for x in range(self.x - 1, self.x + 2):
             for y in range(self.y - 1 , self.y + 2):
                 if (x, y) in full_map and (x, y) != (self.x, self.y):
@@ -21,51 +22,37 @@ class ConwayNode:
         if self.neighbours > 1 and self.neighbours < 4:
             return True
         return False
+
+    def born(self):
+        return False
+
+    def draw(self, window, window_upperleft, window_lowerright):
+        if self.x <= window_upperleft[0] or self.x >= window_lowerright[0]:
+            return
+        if self.y <= window_upperleft[1] or self.y >= window_lowerright[1]:
+            return
+        window.addch(self.y, self.x, self.character)
+
+
+class ConwayNode(Node):
+    def __init__(self, x, y):
+        self.character = "X"
+        super().__init__(x, y)
 
     def born(self):
         if self.neighbours == 3:
             return True
         return False
 
-    def draw(self, window, window_upperleft, window_lowerright):
-        if self.x <= window_upperleft[0] or self.x >= window_lowerright[0]:
-            return
-        if self.y <= window_upperleft[1] or self.y >= window_lowerright[1]:
-            return
-        window.addch(self.y, self.x, "X")
-
-class HighlifeNode:
+class HighlifeNode(Node):
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.neighbours = 0
-        self.native_neighbours = 0
-
-    def update_neighbours(self, full_map):
-        self.neighbours = 0
-        for x in range(self.x - 1, self.x + 2):
-            for y in range(self.y - 1 , self.y + 2):
-                if (x, y) in full_map and (x, y) != (self.x, self.y):
-                    self.neighbours += 1
-                    if isinstance(full_map[(x,y)], type(self)):
-                        self.native_neighbours += 1
-
-    def survive(self):
-        if self.neighbours > 1 and self.neighbours < 4:
-            return True
-        return False
+        self.character = "O"
+        super().__init__(x, y)
 
     def born(self):
         if self.neighbours == 3 or self.neighbours == 6:
             return True
         return False
-
-    def draw(self, window, window_upperleft, window_lowerright):
-        if self.x <= window_upperleft[0] or self.x >= window_lowerright[0]:
-            return
-        if self.y <= window_upperleft[1] or self.y >= window_lowerright[1]:
-            return
-        window.addch(self.y, self.x, "O")
 
 class Simulation:
     def __init__(self):
@@ -118,6 +105,9 @@ class Simulation:
                         target_board[(x,y)] = node
 
 
+    # Legg til nytt brett
+    # Tar inn filnavn og klasse på nodene
+    # Returnerer ingenting
     def add_board(self, filename, cls):
         if cls not in self.active_classes:
             self.active_classes.append(cls)
